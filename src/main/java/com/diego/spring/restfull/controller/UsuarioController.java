@@ -3,13 +3,18 @@ package com.diego.spring.restfull.controller;
 import com.diego.spring.restfull.model.Usuario;
 import com.diego.spring.restfull.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
+@Transactional
 @RequestMapping(value = "/usuario")
 public class UsuarioController {
 
@@ -17,11 +22,11 @@ public class UsuarioController {
     private UsuarioRepository usuarioRepository;
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Object> findUserById(@PathVariable(value = "id") Long idUsuario) {
+    public ResponseEntity<?> findUserById(@PathVariable(value = "id") Long idUsuario) {
 
-        Optional<Usuario> optional = usuarioRepository.findById(idUsuario);
-
-        return optional.<ResponseEntity<Object>>map(usuario -> ResponseEntity.ok().body(usuario)).orElseGet(() -> ResponseEntity.badRequest().body("Usuário não encontrado"));
+        return usuarioRepository.findById(idUsuario)
+                .map(usuario -> ResponseEntity.ok().body(usuario))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não encontrado"));
     }
 
     @GetMapping(value = "/")
@@ -30,14 +35,21 @@ public class UsuarioController {
     }
 
     @PostMapping("/")
-    @ResponseBody
-    public ResponseEntity<Usuario> save(@RequestBody Usuario usuario) {
+    public ResponseEntity<Usuario> save(@Valid @RequestBody Usuario usuario) {
+
+        for (int i = 0; i < usuario.getTelefones().size(); i++) {
+            usuario.getTelefones().get(i).setUsuario(usuario);
+        }
         return ResponseEntity.ok().body(usuarioRepository.save(usuario));
     }
 
     @PutMapping("/")
-    @ResponseBody
-    public ResponseEntity<Usuario> update(@RequestBody Usuario usuario) {
+    public ResponseEntity<Usuario> update(@Valid @RequestBody Usuario usuario) {
+
+        for (int i = 0; i < usuario.getTelefones().size(); i++) {
+            usuario.getTelefones().get(i).setUsuario(usuario);
+        }
+
         return ResponseEntity.ok().body(usuarioRepository.save(usuario));
     }
 
