@@ -1,14 +1,17 @@
 package com.diego.spring.restfull.model;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
-public class Usuario implements Serializable {
+public class Usuario implements UserDetails {
 
     private static final Long serialVersionUID = 1L;
 
@@ -22,8 +25,25 @@ public class Usuario implements Serializable {
     @NotBlank
     private String senha;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Telefone> telefones = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuarios_role", uniqueConstraints = @UniqueConstraint(
+            columnNames = {"usuario_id", "role_id"}, name = "unique_role_user"),
+            joinColumns = @JoinColumn(name = "usuario_id", referencedColumnName = "id", table = "usuario", unique = false,
+                    foreignKey = @ForeignKey(name = "usuario_fk", value = ConstraintMode.CONSTRAINT)),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id", table = "role", unique = false, updatable = false,
+                    foreignKey = @ForeignKey(name = "role_fk", value = ConstraintMode.CONSTRAINT)))
+    private List<Role> roles;
+
+    public Usuario() {
+    }
+
+    public Usuario(String login, String senha) {
+        this.login = login;
+        this.senha = senha;
+    }
 
     public List<Telefone> getTelefones() {
         return telefones;
@@ -33,12 +53,12 @@ public class Usuario implements Serializable {
         this.telefones = telefones;
     }
 
-    public Usuario(String login, String senha) {
-        this.login = login;
-        this.senha = senha;
+    public List<Role> getRoles() {
+        return roles;
     }
 
-    public Usuario() {
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 
     public Long getId() {
@@ -76,5 +96,40 @@ public class Usuario implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getLogin(), getSenha());
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.roles;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.senha;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.login;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

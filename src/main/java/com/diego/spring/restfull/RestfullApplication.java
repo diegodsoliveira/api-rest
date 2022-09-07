@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -20,7 +21,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @RestController
 @EnableAutoConfiguration
-public class RestfullApplication implements WebMvcConfigurer {
+public class RestfullApplication extends SpringBootServletInitializer implements WebMvcConfigurer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(RestfullApplication.class, args);
@@ -29,7 +30,7 @@ public class RestfullApplication implements WebMvcConfigurer {
 	@Override
 	public void addCorsMappings(CorsRegistry registry) { // mapeamento global
 		registry.addMapping("/usuario/**")
-				.allowedMethods("GET", "POST") // requisições http
-				.allowedOrigins("*"); // domínio
+				.allowedMethods("*") // requisições http
+				.allowedOrigins("*"); // domínios
 	}
 }
