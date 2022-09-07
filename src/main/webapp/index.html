@@ -7,11 +7,19 @@
 </head>
 <body>
     <script>
-        $(document).ready( function() {
-            $ajax({
+       $(document).ready (
 
-            })
-        })
+			function () {
+
+				$.ajax({
+					url : "https://tomcat.diegooliveirapro.com.br/api-restfull/usuario/",
+					method:"GET"
+				}).then(function (data, status, info) {
+
+				} );
+
+			}
+		);
 
     </script>
 
