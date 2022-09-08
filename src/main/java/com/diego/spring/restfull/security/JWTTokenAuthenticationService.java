@@ -12,22 +12,20 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Date;
 
 @Service
 @Component
 public class JWTTokenAuthenticationService {
 
-    // tempo de validade do token em ms (2 dias)
-    private static final long EXPIRATION_TIME = 172800000;
-
+    private static final long EXPIRATION_TIME = 172800000; // tempo de validade do token em ms (2 dias)
     private static final String SECRET = "SenhaExtremamenteSecreta"; // auxiliar
-
     private static final String TOKEN_PREFIX = "Bearer"; // prefixo padrão token
     private static final String HEADER_STRING = "Authorization";
 
     // gera o token de autenticação
-    public void addAuthentication(HttpServletResponse response, String username) throws Exception {
+    public void addAuthentication(HttpServletResponse response, String username) throws IOException {
         String JWT = Jwts.builder() // chama o gerador de token
                 .setSubject(username) // adiciona o usuário recebido no método
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // tempo de expiração
