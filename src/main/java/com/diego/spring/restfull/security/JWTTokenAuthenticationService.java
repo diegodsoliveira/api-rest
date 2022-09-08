@@ -3,6 +3,7 @@ package com.diego.spring.restfull.security;
 import com.diego.spring.restfull.ApplicationContextLoad;
 import com.diego.spring.restfull.model.Usuario;
 import com.diego.spring.restfull.repository.UsuarioRepository;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,37 +36,69 @@ public class JWTTokenAuthenticationService {
 
         response.addHeader(HEADER_STRING, token); // Authorization: Bearer ...
 
+        ApplicationContextLoad.getApplicationContext().getBean(UsuarioRepository.class).atualizaTokenUser(JWT, username);
+
+        liberacaoCors(response); // liberando consulta externa à API
+
         response.getWriter().write("{\"Authorization\": \"" + token + "\"}"); // resposta no corpo http
     }
 
     // retorna o usuário validado com token ou nulo
-    public Authentication getAuthentication(HttpServletRequest request) {
+    public Authentication getAuthentication(HttpServletRequest request, HttpServletResponse response) {
 
         String token = request.getHeader(HEADER_STRING);
 
-        if (token != null) {
+        try {
+            if (token != null) {
 
-            // descompacta o token e retorna o usuário pai
-            String user = Jwts
-                    .parser()
-                    .setSigningKey(SECRET)
-                    .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
-                    .getBody().getSubject();
+                String tokenLimpo = token.replace(TOKEN_PREFIX, "").trim();
 
-            if (user != null) {
-                Usuario usuario = ApplicationContextLoad
-                        .getApplicationContext()
-                        .getBean(UsuarioRepository.class)
-                        .findUserByLogin(user);
+                // descompacta o token e retorna o usuário pai
+                String user = Jwts
+                        .parser()
+                        .setSigningKey(SECRET)
+                        .parseClaimsJws(tokenLimpo)
+                        .getBody().getSubject();
 
-                if (usuario != null) {
-                    return new UsernamePasswordAuthenticationToken(
-                            usuario.getLogin(),
-                            usuario.getSenha(),
-                            usuario.getAuthorities());
+                if (user != null) {
+                    Usuario usuario = ApplicationContextLoad
+                            .getApplicationContext()
+                            .getBean(UsuarioRepository.class)
+                            .findUserByLogin(user);
+
+                    if (usuario != null) {
+
+                        if (usuario.getToken().equalsIgnoreCase(tokenLimpo)) {
+
+                            return new UsernamePasswordAuthenticationToken(
+                                    usuario.getLogin(),
+                                    usuario.getSenha(),
+                                    usuario.getAuthorities());
+                        }
+                    }
                 }
             }
+        } catch (ExpiredJwtException e) {
+            try {
+                response.getOutputStream().println("Token expirado: faça login ou informe um novo token");
+            } catch (IOException ex) { }
         }
+        liberacaoCors(response);
         return null; // Não autorizado
+    }
+
+    private void liberacaoCors(HttpServletResponse response) {
+        if (response.getHeader("Access-Control-Allow-Origin") == null) {
+            response.addHeader("Access-Control-Allow-Origin", "*");
+        }
+        if (response.getHeader("Access-Control-Allow-Headers") == null) {
+            response.addHeader("Access-Control-Allow-Headers", "*");
+        }
+        if (response.getHeader("Access-Control-Request-Headers") == null) {
+            response.addHeader("Access-Control-Request-Headers", "*");
+        }
+        if (response.getHeader("Access-Control-Allow-Methods") == null) {
+            response.addHeader("Access-Control-Allow-Methods", "*");
+        }
     }
 }

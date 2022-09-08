@@ -18,7 +18,7 @@ public class Usuario implements UserDetails {
     private static final Long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
@@ -27,6 +27,8 @@ public class Usuario implements UserDetails {
 
     @NotBlank
     private String senha;
+
+    private String token;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Telefone> telefones = new ArrayList<>();
@@ -46,6 +48,14 @@ public class Usuario implements UserDetails {
     public Usuario(String login, String senha) {
         this.login = login;
         this.senha = senha;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public List<Telefone> getTelefones() {

@@ -1,8 +1,12 @@
 package com.diego.spring.restfull.controller;
 
 import com.diego.spring.restfull.model.Usuario;
+import com.diego.spring.restfull.model.dto.UsuarioDTO;
 import com.diego.spring.restfull.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,13 +31,21 @@ public class UsuarioController {
     public ResponseEntity<?> findUserById(@PathVariable(value = "id") Long idUsuario) {
 
         return usuarioRepository.findById(idUsuario)
-                .map(usuario -> ResponseEntity.ok().body(usuario))
+                .map(usuario -> ResponseEntity.ok().body(new UsuarioDTO(usuario)))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não encontrado"));
     }
 
     @GetMapping(value = "/")
-    public ResponseEntity<List<Usuario>> findAll() {
-        return ResponseEntity.ok().body(usuarioRepository.findAll());
+    @CacheEvict(value = "cacheUsuarios", allEntries = true)
+    @CachePut("cacheUsuarios")
+    public ResponseEntity<List<UsuarioDTO>> findAll() {
+
+        List<UsuarioDTO> list = new ArrayList<>();
+
+        for (Usuario usuario : usuarioRepository.findAll()) {
+            list.add(new UsuarioDTO(usuario));
+        }
+        return ResponseEntity.ok().body(list);
     }
 
     @PostMapping("/")
@@ -63,7 +76,7 @@ public class UsuarioController {
                 return ResponseEntity.ok().body(usuarioRepository.save(usuario));
             }
         }
-        return ResponseEntity.badRequest().body(new Usuario());
+        return null;
     }
 
     @DeleteMapping("/{id}")
