@@ -5,6 +5,7 @@ import com.diego.spring.restfull.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -40,17 +41,29 @@ public class UsuarioController {
         for (int i = 0; i < usuario.getTelefones().size(); i++) {
             usuario.getTelefones().get(i).setUsuario(usuario);
         }
+        if (usuario.getSenha() != null) {
+            usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+        }
         return ResponseEntity.ok().body(usuarioRepository.save(usuario));
     }
 
     @PutMapping("/")
     public ResponseEntity<Usuario> update(@Valid @RequestBody Usuario usuario) {
 
-        for (int i = 0; i < usuario.getTelefones().size(); i++) {
-            usuario.getTelefones().get(i).setUsuario(usuario);
-        }
+        if (usuario.getId() != null) {
+            Optional<Usuario> optional = usuarioRepository.findById(usuario.getId());
 
-        return ResponseEntity.ok().body(usuarioRepository.save(usuario));
+            if (optional.isPresent()) {
+                for (int i = 0; i < usuario.getTelefones().size(); i++) {
+                    usuario.getTelefones().get(i).setUsuario(usuario);
+                }
+                if (usuario.getSenha() != null && !optional.get().getSenha().equals(usuario.getSenha())) {
+                    usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+                }
+                return ResponseEntity.ok().body(usuarioRepository.save(usuario));
+            }
+        }
+        return ResponseEntity.badRequest().body(new Usuario());
     }
 
     @DeleteMapping("/{id}")
