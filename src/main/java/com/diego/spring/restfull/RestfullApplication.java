@@ -29,7 +29,7 @@ public class RestfullApplication extends SpringBootServletInitializer implements
 
 	public static void main(String[] args) {
 		SpringApplication.run(RestfullApplication.class, args);
-		//System.out.println(new BCryptPasswordEncoder().encode("admin"));
+		System.out.println(new BCryptPasswordEncoder().encode("admin"));
 	}
 
 	@Override

@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 public class Telefone {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Column(length = 11)
@@ -19,7 +19,7 @@ public class Telefone {
 
     @JoinColumn(name = "usuario_id")
     @ManyToOne(optional = false)
-    //@JsonIgnore
+    @JsonIgnore
     private Usuario usuario;
 
     public Long getId() {

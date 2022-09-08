@@ -18,7 +18,7 @@ public class Usuario implements UserDetails {
     private static final Long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotBlank
@@ -31,7 +31,7 @@ public class Usuario implements UserDetails {
     private String token;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Telefone> telefones = new ArrayList<>();
+    private List<Telefone> telefones;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "usuarios_role", uniqueConstraints = @UniqueConstraint(

@@ -67,12 +67,20 @@ public class UsuarioController {
             Optional<Usuario> optional = usuarioRepository.findById(usuario.getId());
 
             if (optional.isPresent()) {
-                for (int i = 0; i < usuario.getTelefones().size(); i++) {
-                    usuario.getTelefones().get(i).setUsuario(usuario);
+                if (usuario.getTelefones().size() > 0) {
+                    for (int i = 0; i < usuario.getTelefones().size(); i++) {
+                        usuario.getTelefones().get(i).setUsuario(usuario);
+                    }
                 }
-                if (usuario.getSenha() != null && !optional.get().getSenha().equals(usuario.getSenha())) {
+
+                if (usuario.getSenha() != null) {
                     usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+                } else {
+                    usuario.setSenha(optional.get().getSenha());
                 }
+
+                usuario.setToken(optional.get().getToken());
+                usuario.setRoles(optional.get().getRoles());
                 return ResponseEntity.ok().body(usuarioRepository.save(usuario));
             }
         }
