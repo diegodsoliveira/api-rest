@@ -3,10 +3,11 @@ package com.diego.spring.restfull.controller;
 import com.diego.spring.restfull.model.Usuario;
 import com.diego.spring.restfull.model.dto.UsuarioDTO;
 import com.diego.spring.restfull.repository.UsuarioRepository;
+import com.diego.spring.restfull.service.GenericUtilService;
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -49,7 +50,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Usuario> save(@Valid @RequestBody Usuario usuario) {
+    public ResponseEntity<Usuario> save(@Valid @RequestBody Usuario usuario) throws Exception {
 
         for (int i = 0; i < usuario.getTelefones().size(); i++) {
             usuario.getTelefones().get(i).setUsuario(usuario);
@@ -57,6 +58,11 @@ public class UsuarioController {
         if (usuario.getSenha() != null) {
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
         }
+
+        // consumindo API externa Via cep
+        String endereco = new GenericUtilService().consultaCep(usuario.getCep()).toString();
+        usuario.setaCamposEndereco(new Gson().fromJson(endereco, Usuario.class));
+
         return ResponseEntity.ok().body(usuarioRepository.save(usuario));
     }
 
